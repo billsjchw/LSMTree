@@ -61,6 +61,7 @@ bool SkipList::del(uint64_t key) {
     --totalEntries;
     totalBytes -= tower->value.length();
     delete tower;
+    return true;
 }
 
 bool SkipList::contains(uint64_t key) const {
