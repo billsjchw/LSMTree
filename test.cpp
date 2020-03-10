@@ -5,10 +5,11 @@ int main() {
     SkipList skipList;
 
     skipList.put(1, "xyz");
-    skipList.put(1, "abc");
+    skipList.put(3, "abc");
     skipList.put(2, "ijk");
-    skipList.del(1);
-    std::cout << skipList.get(2) << std::endl;
+    SkipList::Iterator itr = skipList.iterator();
+    while (itr.hasNext())
+        std::cout << itr.next().first << std::endl;
 
     return 0;
 }

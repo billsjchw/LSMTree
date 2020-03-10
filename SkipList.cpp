@@ -20,7 +20,7 @@ void SkipList::clear() {
     init();
 }
 
-std::string SkipList::get(uint64_t key) {
+std::string SkipList::get(uint64_t key) const {
     Tower *tower = find(key);
     return tower != head && tower->key == key ? tower->value : "";
 }
@@ -63,20 +63,24 @@ bool SkipList::del(uint64_t key) {
     delete tower;
 }
 
-bool SkipList::contains(uint64_t key) {
+bool SkipList::contains(uint64_t key) const {
     Tower *tower = find(key);
     return tower != head && tower->key == key;
 }
 
-size_t SkipList::size() {
+SkipList::Iterator SkipList::iterator() const {
+    return {head->nexts[0]};
+}
+
+size_t SkipList::size() const {
     return totalEntries;
 }
 
-bool SkipList::empty() {
+bool SkipList::empty() const {
     return totalEntries == 0;
 }
 
-size_t SkipList::space() {
+size_t SkipList::space() const {
     return totalBytes;
 }
 
@@ -90,7 +94,7 @@ void SkipList::init() {
     totalBytes = 0;
 }
 
-SkipList::Tower *SkipList::find(uint64_t key) {
+SkipList::Tower *SkipList::find(uint64_t key) const {
     Tower *tower = head;
     size_t height = head->height;
     for (size_t i = 1; i <= height; ++i) {
@@ -138,4 +142,19 @@ SkipList::Tower::Tower(uint64_t key, const std::string &value, size_t height)
 SkipList::Tower::~Tower() {
     delete[] prevs;
     delete[] nexts;
+}
+
+SkipList::Iterator::Iterator(Tower *tower): tower(tower) {}
+
+SkipList::Iterator::Iterator(const Iterator &itr): tower(itr.tower) {}
+
+std::pair<uint64_t, std::string> SkipList::Iterator::next() {
+    std::pair<uint64_t, std::string> entry = std::make_pair(tower->key, tower->value);
+    if (tower->nexts[0] != nullptr)
+        tower = tower->nexts[0];
+    return entry;
+}
+
+bool SkipList::Iterator::hasNext() const {
+    return tower->nexts[0] != nullptr;
 }
