@@ -2,6 +2,7 @@
 #define SKIP_LIST_H
 
 #include <cstdint>
+#include <cstddef>
 #include <string>
 #include <random>
 #include <utility>

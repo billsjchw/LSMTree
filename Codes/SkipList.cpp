@@ -93,6 +93,7 @@ void SkipList::init() {
     tail->prevs[0] = head;
     tail->nexts[0] = nullptr;
     totalBytes = 0;
+    totalEntries = 0;
 }
 
 SkipList::Tower *SkipList::find(uint64_t key) const {
