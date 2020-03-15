@@ -46,7 +46,6 @@ struct SkipList::Tower {
 
 class SkipList::Iterator {
 public:
-    Iterator(const Iterator &itr);
     std::pair<uint64_t, std::string> next();
     bool hasNext() const;
 private:

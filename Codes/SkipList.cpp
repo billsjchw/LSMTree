@@ -146,8 +146,6 @@ SkipList::Tower::~Tower() {
     delete[] nexts;
 }
 
-SkipList::Iterator::Iterator(Tower *tower): tower(tower) {}
-
 SkipList::Iterator::Iterator(const Iterator &itr): tower(itr.tower) {}
 
 std::pair<uint64_t, std::string> SkipList::Iterator::next() {
