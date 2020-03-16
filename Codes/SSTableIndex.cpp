@@ -34,3 +34,7 @@ uint64_t SSTableIndex::find(uint64_t key, bool &success) {
         return 0;
     }
 }
+
+uint64_t SSTableIndex::space() {
+    return byteCnt;
+}
