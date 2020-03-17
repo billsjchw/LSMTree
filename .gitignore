@@ -1,3 +1,6 @@
 correctness
 persistence
 *.o
+*.sst
+*.exe
+index
