@@ -38,7 +38,7 @@ SSTable::SSTable(const std::vector<Entry> &data, size_t &pos, uint64_t bound, co
     size = 0;
     uint64_t offset = 0;
     std::ostringstream oss;
-    while (pos < n && offset <= bound) {
+    while (pos < n && (size * 2 + 3) * sizeof(uint64_t) + offset <= bound) {
         Entry entry = data[pos];
         keys.push_back(entry.key);
         offsets.push_back(offset);
@@ -75,7 +75,7 @@ SearchResult SSTable::search(uint64_t key) const {
 std::vector<Entry> SSTable::load() const {
     std::vector<Entry> ret;
     std::ifstream ifs(id.name(), std::ios::binary);
-    ifs.seekg((2 * size + 3) * 8, std::ios::beg);
+    ifs.seekg((2 * size + 3) * sizeof(uint64_t), std::ios::beg);
     for (uint64_t i = 0; i < size; ++i) {
         uint64_t key = keys[i];
         uint64_t len = offsets[i + 1] - offsets[i];
@@ -106,6 +106,10 @@ uint64_t SSTable::upper() const {
     return keys[size - 1];
 }
 
+uint64_t SSTable::space() const {
+    return (size * 2 + 3) * sizeof(uint64_t) + offsets.back();
+}
+
 void SSTable::save(const std::string &values) const {
     std::ofstream ofs(id.name(), std::ios::binary);
     ofs.write((char*) &size, sizeof(uint64_t));
@@ -122,7 +126,7 @@ std::string SSTable::read(uint64_t pos) const {
     uint64_t len = offsets[pos + 1] - offsets[pos];
     char *buf = new char[len + 1];
     buf[len] = '\0';
-    ifs.seekg((2 * size + 3) * 8 + offsets[pos], std::ios::beg);
+    ifs.seekg((2 * size + 3) * sizeof(uint64_t) + offsets[pos], std::ios::beg);
     ifs.read(buf, len);
     std::string value(buf);
     delete[] buf;

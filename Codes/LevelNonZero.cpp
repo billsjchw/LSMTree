@@ -7,11 +7,13 @@
 LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
     if (!std::filesystem::exists(std::filesystem::path(dir))) {
         size = 0;
+        byteCnt = 0;
         lastKey = 0;
         std::filesystem::create_directories(std::filesystem::path(dir));
     } else {
         std::ifstream ifs(dir + "/index", std::ios::binary);
         ifs.read((char*) &size, sizeof(uint64_t));
+        ifs.read((char*) &byteCnt, sizeof(uint64_t));
         ifs.read((char*) &lastKey, sizeof(uint64_t));
         for (uint64_t i = 0; i < size; ++i) {
             uint64_t no;
@@ -25,6 +27,7 @@ LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
 LevelNonZero::~LevelNonZero() {
     std::ofstream ofs(dir + "/index", std::ios::binary);
     ofs.write((char*) &size, sizeof(uint64_t));
+    ofs.write((char*) &byteCnt, sizeof(uint64_t));
     ofs.write((char*) &lastKey, sizeof(uint64_t));
     for (const SSTable &ssTable : ssTables) {
         uint64_t no = ssTable.number();
@@ -33,7 +36,7 @@ LevelNonZero::~LevelNonZero() {
     ofs.close();
 }
 
-SearchResult LevelNonZero::search(uint64_t key) {
+SearchResult LevelNonZero::search(uint64_t key) const {
     for (const SSTable &ssTable : ssTables) {
         SearchResult res = ssTable.search(key);
         if (res.success)
@@ -48,10 +51,12 @@ std::vector<Entry> LevelNonZero::extract() {
         ++itr;
     if (itr == ssTables.end())
         itr = ssTables.begin();
+    byteCnt -= itr->space();
     lastKey = itr->upper();
     std::vector<Entry> ret = itr->load();
     itr->remove();
     ssTables.erase(itr);
+    --size;
     return ret; 
 }
 
@@ -65,6 +70,7 @@ void LevelNonZero::merge(const std::vector<Entry> &lData, uint64_t &no) {
     while (itr != ssTables.end() && itr->lower() <= hi) {
         for (const Entry &entry : itr->load())
             eData.emplace_back(entry);
+        byteCnt -= itr->space();
         itr->remove();
         itr = ssTables.erase(itr);
         --size;
@@ -73,7 +79,12 @@ void LevelNonZero::merge(const std::vector<Entry> &lData, uint64_t &no) {
     size_t n = data.size();
     size_t pos = 0;
     while (pos < n) {
-        ssTables.emplace(itr, data, pos, Utility::BOUND, SSTableId(dir, no++));
+        ssTables.emplace(itr, data, pos, Utility::SSTABLE_BOUND, SSTableId(dir, no++));
         ++size;
+        byteCnt += ssTables.back().space();
     }
+}
+
+uint64_t LevelNonZero::space() const {
+    return byteCnt;
 }

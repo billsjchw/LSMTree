@@ -4,3 +4,4 @@ persistence
 *.sst
 *.exe
 index
+meta

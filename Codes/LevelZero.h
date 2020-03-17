@@ -13,12 +13,14 @@ class LevelZero {
 public:
     explicit LevelZero(const std::string &dir);
     ~LevelZero();
-    SearchResult search(uint64_t key);
+    SearchResult search(uint64_t key) const;
     void add(const SkipList &memTable, uint64_t &no);
     std::vector<Entry> extract();
+    uint64_t space() const;
 private:
     std::string dir;
     uint64_t size;
+    uint64_t byteCnt;
     std::vector<SSTable> ssTables;
 };
 
