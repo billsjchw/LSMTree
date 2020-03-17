@@ -1,6 +1,7 @@
 #ifndef SKIP_LIST_H
 #define SKIP_LIST_H
 
+#include "Entry.h"
 #include <cstdint>
 #include <cstddef>
 #include <string>
@@ -46,7 +47,7 @@ struct SkipList::Tower {
 
 class SkipList::Iterator {
 public:
-    std::pair<uint64_t, std::string> next();
+    Entry next();
     bool hasNext() const;
 private:
     Tower *tower;
