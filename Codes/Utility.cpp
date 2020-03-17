@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <algorithm>
 
+uint64_t Utility::BOUND = 2 * 1024 * 1024;
+
 std::vector<Entry> Utility::compact(const std::vector<std::vector<Entry>> &inputs) {
     size_t n = inputs.size();
     std::vector<Entry> ret;

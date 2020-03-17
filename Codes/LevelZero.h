@@ -12,10 +12,10 @@
 class LevelZero {
 public:
     explicit LevelZero(const std::string &dir);
+    ~LevelZero();
     SearchResult search(uint64_t key);
     void add(const SkipList &memTable, uint64_t &no);
     std::vector<Entry> extract();
-    void save();
 private:
     std::string dir;
     uint64_t size;

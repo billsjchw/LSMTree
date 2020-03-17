@@ -98,6 +98,14 @@ uint64_t SSTable::number() const {
     return id.no;
 }
 
+uint64_t SSTable::lower() const {
+    return keys[0];
+}
+
+uint64_t SSTable::upper() const {
+    return keys[size - 1];
+}
+
 void SSTable::save(const std::string &values) const {
     std::ofstream ofs(id.name(), std::ios::binary);
     ofs.write((char*) &size, sizeof(uint64_t));

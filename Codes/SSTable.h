@@ -19,6 +19,8 @@ public:
     std::vector<Entry> load() const;
     void remove() const;
     uint64_t number() const;
+    uint64_t lower() const;
+    uint64_t upper() const;
 private:
     SSTableId id;
     uint64_t size;
