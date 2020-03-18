@@ -3,13 +3,17 @@
 #include "SSTableId.h"
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
+#include <iostream>
+#include <new>
 
 LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
     if (!std::filesystem::exists(std::filesystem::path(dir))) {
+        std::filesystem::create_directories(std::filesystem::path(dir));
         size = 0;
         byteCnt = 0;
         lastKey = 0;
-        std::filesystem::create_directories(std::filesystem::path(dir));
+        save();
     } else {
         std::ifstream ifs(dir + "/index", std::ios::binary);
         ifs.read((char*) &size, sizeof(uint64_t));
@@ -22,18 +26,6 @@ LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
         }
         ifs.close();
     }
-}
-
-LevelNonZero::~LevelNonZero() {
-    std::ofstream ofs(dir + "/index", std::ios::binary);
-    ofs.write((char*) &size, sizeof(uint64_t));
-    ofs.write((char*) &byteCnt, sizeof(uint64_t));
-    ofs.write((char*) &lastKey, sizeof(uint64_t));
-    for (const SSTable &ssTable : ssTables) {
-        uint64_t no = ssTable.number();
-        ofs.write((char*) &no, sizeof(uint64_t));
-    }
-    ofs.close();
 }
 
 SearchResult LevelNonZero::search(uint64_t key) const {
@@ -57,6 +49,7 @@ std::vector<Entry> LevelNonZero::extract() {
     itr->remove();
     ssTables.erase(itr);
     --size;
+    save();
     return ret; 
 }
 
@@ -69,13 +62,13 @@ void LevelNonZero::merge(const std::vector<Entry> &lData, uint64_t &no) {
         ++itr;
     while (itr != ssTables.end() && itr->lower() <= hi) {
         for (const Entry &entry : itr->load())
-            eData.emplace_back(entry);
+            eData.emplace_back(std::move(entry));
         byteCnt -= itr->space();
         itr->remove();
         itr = ssTables.erase(itr);
         --size;
     }
-    std::vector<Entry> data = Utility::compact({eData, lData});
+    std::vector<Entry> data = Utility::compact({std::move(eData), std::move(lData)});
     size_t n = data.size();
     size_t pos = 0;
     while (pos < n) {
@@ -83,6 +76,7 @@ void LevelNonZero::merge(const std::vector<Entry> &lData, uint64_t &no) {
         ++size;
         byteCnt += ssTables.back().space();
     }
+    save();
 }
 
 void LevelNonZero::clear() {
@@ -93,8 +87,21 @@ void LevelNonZero::clear() {
     size = 0;
     byteCnt = 0;
     lastKey = 0;
+    save();
 }
 
 uint64_t LevelNonZero::space() const {
     return byteCnt;
+}
+
+void LevelNonZero::save() const {
+    std::ofstream ofs(dir + "/index", std::ios::binary);
+    ofs.write((char*) &size, sizeof(uint64_t));
+    ofs.write((char*) &byteCnt, sizeof(uint64_t));
+    ofs.write((char*) &lastKey, sizeof(uint64_t));
+    for (const SSTable &ssTable : ssTables) {
+        uint64_t no = ssTable.number();
+        ofs.write((char*) &no, sizeof(uint64_t));
+    }
+    ofs.close();
 }

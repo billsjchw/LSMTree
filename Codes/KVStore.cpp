@@ -10,8 +10,8 @@ KVStore::~KVStore() {
 		disk.add(memTable);
 }
 
-void KVStore::put(uint64_t key, const std::string &s) {
-	memTable.put(key, s);
+void KVStore::put(uint64_t key, const std::string &value) {
+	memTable.put(key, value);
 	if (memTable.space() > Utility::SSTABLE_BOUND) {
 		disk.add(memTable);
 		memTable.clear();
@@ -26,7 +26,7 @@ std::string KVStore::get(uint64_t key) {
 }
 
 bool KVStore::del(uint64_t key) {
-	bool ret = memTable.contains(key) || disk.search(key).success;
+	bool ret = get(key) != "";
 	put(key, "");
 	return ret;
 }

@@ -12,7 +12,6 @@
 class DiskStorage {
 public:
     explicit DiskStorage(const std::string &dir);
-    ~DiskStorage();
     void add(const SkipList &memTable);
     SearchResult search(uint64_t key);
     void clear();
@@ -21,6 +20,7 @@ private:
     uint64_t no;
     LevelZero level0;
     std::vector<LevelNonZero> levels;
+    void save() const;
 };
 
 #endif

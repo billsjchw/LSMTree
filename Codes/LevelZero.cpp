@@ -6,9 +6,10 @@
 
 LevelZero::LevelZero(const std::string &dir): dir(dir) {
     if (!std::filesystem::exists(std::filesystem::path(dir))) {
+        std::filesystem::create_directories(std::filesystem::path(dir));
         size = 0;
         byteCnt = 0;
-        std::filesystem::create_directories(std::filesystem::path(dir));
+        save();
     } else {
         std::ifstream ifs(dir + "/index", std::ios::binary);
         ifs.read((char*) &size, sizeof(uint64_t));
@@ -20,17 +21,6 @@ LevelZero::LevelZero(const std::string &dir): dir(dir) {
         }
         ifs.close();
     }
-}
-
-LevelZero::~LevelZero() {
-    std::ofstream ofs(dir + "/index", std::ios::binary);
-    ofs.write((char*) &size, sizeof(uint64_t));
-    ofs.write((char*) &byteCnt, sizeof(uint64_t));
-    for (const SSTable &ssTable : ssTables) {
-        uint64_t no = ssTable.number();
-        ofs.write((char*) &no, sizeof(uint64_t));
-    }
-    ofs.close();
 }
 
 SearchResult LevelZero::search(uint64_t key) const {
@@ -46,6 +36,7 @@ void LevelZero::add(const SkipList &memTable, uint64_t &no) {
     ssTables.emplace_back(memTable, SSTableId(dir, no++));
     ++size;
     byteCnt += memTable.space();
+    save();
 }
 
 std::vector<Entry> LevelZero::extract() {
@@ -57,6 +48,7 @@ std::vector<Entry> LevelZero::extract() {
     size = 0;
     byteCnt = 0;
     ssTables.clear();
+    save();
     return Utility::compact(inputs);
 }
 
@@ -67,8 +59,20 @@ void LevelZero::clear() {
     }
     size = 0;
     byteCnt = 0;
+    save();
 }
 
 uint64_t LevelZero::space() const {
     return byteCnt;
+}
+
+void LevelZero::save() const {
+    std::ofstream ofs(dir + "/index", std::ios::binary);
+    ofs.write((char*) &size, sizeof(uint64_t));
+    ofs.write((char*) &byteCnt, sizeof(uint64_t));
+    for (const SSTable &ssTable : ssTables) {
+        uint64_t no = ssTable.number();
+        ofs.write((char*) &no, sizeof(uint64_t));
+    }
+    ofs.close();
 }

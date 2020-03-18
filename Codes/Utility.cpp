@@ -36,11 +36,11 @@ std::vector<Entry> Utility::compact(const std::vector<std::vector<Entry>> &input
         std::string value;
         for (size_t i = 0; i < n; ++i)
             if (poses[i] < inputs[i].size() && inputs[i][poses[i]].key == key) {
-                value = inputs[i][poses[i]++].value;
+                value = std::move(inputs[i][poses[i]++].value);
                 if (poses[i] == inputs[i].size())
                     --nonEmpty;
             }
-        ret.emplace_back(key, value);
+        ret.emplace_back(key, std::move(value));
     }
     return ret;
 }
