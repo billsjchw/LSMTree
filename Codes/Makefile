@@ -1,12 +1,4 @@
-
-LINK.o = $(LINK.cc)
-CXXFLAGS = -std=c++11 -Wall
-
-all: correctness persistence
-
-correctness: kvstore.o correctness.o SkipList.o
-
-persistence: kvstore.o persistence.o SkipList.o
-
-clean:
-	-rm -f correctness.exe persistence.exe *.o
+correctness:
+	g++ -o correctness correctness.cpp SSTable.cpp Entry.cpp SearchResult.cpp SkipList.cpp SSTableId.cpp LevelZero.cpp Utility.cpp LevelNonZero.cpp DiskStorage.cpp KVStore.cpp -std=c++17
+persistence:
+	g++ -o persistence persistence.cpp SSTable.cpp Entry.cpp SearchResult.cpp SkipList.cpp SSTableId.cpp LevelZero.cpp Utility.cpp LevelNonZero.cpp DiskStorage.cpp KVStore.cpp -std=c++17

@@ -1,7 +1,9 @@
 #ifndef SKIP_LIST_H
 #define SKIP_LIST_H
 
+#include "Entry.h"
 #include <cstdint>
+#include <cstddef>
 #include <string>
 #include <random>
 #include <utility>
@@ -19,7 +21,7 @@ public:
     size_t size() const;
     bool empty() const;
     void clear();
-    size_t space() const;
+    uint64_t space() const;
 private:
     struct Tower;
     Tower *head, *tail;
@@ -45,8 +47,7 @@ struct SkipList::Tower {
 
 class SkipList::Iterator {
 public:
-    Iterator(const Iterator &itr);
-    std::pair<uint64_t, std::string> next();
+    Entry next();
     bool hasNext() const;
 private:
     Tower *tower;

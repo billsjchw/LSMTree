@@ -81,8 +81,8 @@ bool SkipList::empty() const {
     return totalEntries == 0;
 }
 
-size_t SkipList::space() const {
-    return totalBytes;
+uint64_t SkipList::space() const {
+    return (totalEntries * 2 + 3) * sizeof(uint64_t) + totalBytes;
 }
 
 void SkipList::init() {
@@ -93,6 +93,7 @@ void SkipList::init() {
     tail->prevs[0] = head;
     tail->nexts[0] = nullptr;
     totalBytes = 0;
+    totalEntries = 0;
 }
 
 SkipList::Tower *SkipList::find(uint64_t key) const {
@@ -147,10 +148,8 @@ SkipList::Tower::~Tower() {
 
 SkipList::Iterator::Iterator(Tower *tower): tower(tower) {}
 
-SkipList::Iterator::Iterator(const Iterator &itr): tower(itr.tower) {}
-
-std::pair<uint64_t, std::string> SkipList::Iterator::next() {
-    std::pair<uint64_t, std::string> entry = std::make_pair(tower->key, tower->value);
+Entry SkipList::Iterator::next() {
+    Entry entry(tower->key, tower->value);
     if (tower->nexts[0] != nullptr)
         tower = tower->nexts[0];
     return entry;
