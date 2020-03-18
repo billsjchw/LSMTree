@@ -4,6 +4,7 @@
 #include "SkipList.h"
 #include "LevelZero.h"
 #include "LevelNonZero.h"
+#include "SearchResult.h"
 #include <string>
 #include <cstdint>
 #include <vector>
@@ -13,7 +14,8 @@ public:
     explicit DiskStorage(const std::string &dir);
     ~DiskStorage();
     void add(const SkipList &memTable);
-    std::string get(uint64_t key);
+    SearchResult search(uint64_t key);
+    void clear();
 private:
     std::string dir;
     uint64_t no;

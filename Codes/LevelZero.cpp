@@ -60,6 +60,15 @@ std::vector<Entry> LevelZero::extract() {
     return Utility::compact(inputs);
 }
 
+void LevelZero::clear() {
+    while (!ssTables.empty()) {
+        ssTables.back().remove();
+        ssTables.pop_back();
+    }
+    size = 0;
+    byteCnt = 0;
+}
+
 uint64_t LevelZero::space() const {
     return byteCnt;
 }

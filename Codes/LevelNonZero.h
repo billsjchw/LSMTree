@@ -15,6 +15,7 @@ public:
     SearchResult search(uint64_t key) const;
     std::vector<Entry> extract();
     void merge(const std::vector<Entry> &lData, uint64_t &no);
+    void clear();
     uint64_t space() const;
 private:
     std::string dir;

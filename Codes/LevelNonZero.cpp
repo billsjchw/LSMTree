@@ -85,6 +85,16 @@ void LevelNonZero::merge(const std::vector<Entry> &lData, uint64_t &no) {
     }
 }
 
+void LevelNonZero::clear() {
+    while (!ssTables.empty()) {
+        ssTables.back().remove();
+        ssTables.pop_back();
+    }
+    size = 0;
+    byteCnt = 0;
+    lastKey = 0;
+}
+
 uint64_t LevelNonZero::space() const {
     return byteCnt;
 }

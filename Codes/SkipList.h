@@ -21,7 +21,7 @@ public:
     size_t size() const;
     bool empty() const;
     void clear();
-    size_t space() const;
+    uint64_t space() const;
 private:
     struct Tower;
     Tower *head, *tail;

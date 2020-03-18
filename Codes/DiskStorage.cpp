@@ -29,9 +29,15 @@ void DiskStorage::add(const SkipList &memTable) {
             levels[i + 1].merge(levels[i].extract(), no);
 }
 
-std::string DiskStorage::get(uint64_t key) {
+SearchResult DiskStorage::search(uint64_t key) {
     SearchResult res = level0.search(key);
     for (uint64_t i = 0; !res.success && i < Utility::LEVEL_NON_ZERO_NUM; ++i)
         res = levels[i].search(key);
-    return res.success ? res.value : "";
+    return res;
+}
+
+void DiskStorage::clear() {
+    level0.clear();
+    for (uint64_t i = 0; i < Utility::LEVEL_NON_ZERO_NUM; ++i)
+        levels[i].clear();
 }
