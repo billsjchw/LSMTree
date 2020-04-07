@@ -20,7 +20,7 @@ const char *const Utility::LEVEL_ZERO_NAME = "/L0";
 
 const char *const Utility::LEVEL_NON_ZERO_NAMES[] = {"/L1", "/L2", "/L3", "/L4", "/L5", "/L6"};
 
-std::vector<Entry> Utility::compact(const std::vector<std::vector<Entry>> &inputs) {
+std::vector<Entry> Utility::compact(std::vector<std::vector<Entry>> &&inputs) {
     size_t n = inputs.size();
     std::vector<Entry> ret;
     std::vector<size_t> poses(n);
@@ -36,7 +36,7 @@ std::vector<Entry> Utility::compact(const std::vector<std::vector<Entry>> &input
         std::string value;
         for (size_t i = 0; i < n; ++i)
             if (poses[i] < inputs[i].size() && inputs[i][poses[i]].key == key) {
-                value = std::move(inputs[i][poses[i]++].value);
+                value = inputs[i][poses[i]++].value;
                 if (poses[i] == inputs[i].size())
                     --nonEmpty;
             }

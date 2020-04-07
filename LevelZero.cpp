@@ -3,6 +3,7 @@
 #include "Utility.h"
 #include <filesystem>
 #include <fstream>
+#include <algorithm>
 
 LevelZero::LevelZero(const std::string &dir): dir(dir) {
     if (!std::filesystem::exists(std::filesystem::path(dir))) {
@@ -49,7 +50,7 @@ std::vector<Entry> LevelZero::extract() {
     byteCnt = 0;
     ssTables.clear();
     save();
-    return Utility::compact(inputs);
+    return Utility::compact(std::move(inputs));
 }
 
 void LevelZero::clear() {

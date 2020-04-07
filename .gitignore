@@ -1,7 +1,1 @@
-correctness
-persistence
-*.o
-*.sst
-*.exe
-index
-meta
+cmake-build-debug

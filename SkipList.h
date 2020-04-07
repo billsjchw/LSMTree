@@ -52,7 +52,6 @@ public:
 private:
     Tower *tower;
     Iterator(Tower *tower);
-    Iterator() = delete;
 friend SkipList;
 };
 
