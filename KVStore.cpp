@@ -1,4 +1,4 @@
-#include "kvstore.h"
+#include "KVStore.h"
 #include "Utility.h"
 #include "SearchResult.h"
 #include <string>
