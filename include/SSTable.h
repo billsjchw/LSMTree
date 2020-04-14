@@ -5,6 +5,7 @@
 #include "Entry.h"
 #include "SearchResult.h"
 #include "SSTableId.h"
+#include "Location.h"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -17,6 +18,7 @@ public:
     explicit SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &id);
     SearchResult search(uint64_t key) const;
     std::vector<Entry> load() const;
+    std::string loadBlock(uint64_t pos) const;
     void remove() const;
     uint64_t number() const;
     uint64_t lower() const;
@@ -31,8 +33,7 @@ private:
     std::vector<uint64_t> oris;
     std::vector<uint64_t> cmps;
     void save(const std::string &blockSeg);
-    std::string read(uint64_t pos) const;
-    std::string loadBlock(uint64_t pos) const;
+    Location locate(uint64_t pos) const;
     uint64_t indexSpace() const;
     uint64_t blockSpace() const;
 };

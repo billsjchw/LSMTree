@@ -29,10 +29,11 @@ void DiskStorage::add(const SkipList &mem) {
 }
 
 SearchResult DiskStorage::search(uint64_t key) {
-    SearchResult res = level0.search(key);
-    for (uint64_t i = 0; !res.success && i < Option::NZ_NUM; ++i)
-        res = levels[i].search(key);
-    return res;
+    SearchResult result = level0.search(key);
+    for (uint64_t i = 0; !result.success && i < Option::NZ_NUM; ++i)
+        result = levels[i].search(key);
+    cache.complete(result);
+    return result;
 }
 
 void DiskStorage::clear() {

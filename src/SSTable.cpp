@@ -34,7 +34,7 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
     uint64_t cmp = 0;
     std::string block;
     std::string blockSeg;
-    uint64_t entryInBlock = 0;
+    uint64_t entryInBlockCnt = 0;
     SkipList::Iterator itr = mem.iterator();
     while (itr.hasNext()) {
         Entry entry = itr.next();
@@ -42,8 +42,8 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
         offsets.push_back(offset);
         offset += entry.value.size();
         block += entry.value;
-        ++entryInBlock;
-        if (block.size() > Option::BLOCK_SPACE) {
+        ++entryInBlockCnt;
+        if (block.size() >= Option::BLOCK_SPACE) {
             std::string compressed;
             snappy::Compress(block.data(), block.size(), &compressed);
             blockSeg += compressed;
@@ -52,11 +52,11 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
             ori += block.size();
             cmp += compressed.size();
             block.clear();
-            entryInBlock = 0;
+            entryInBlockCnt = 0;
             ++blockCnt;
         }
     }
-    if (entryInBlock > 0) {
+    if (entryInBlockCnt > 0) {
         std::string compressed;
         snappy::Compress(block.data(), block.size(), &compressed);
         blockSeg += compressed;
@@ -83,7 +83,7 @@ SSTable::SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &i
     uint64_t cmp = 0;
     std::string block;
     std::string blockSeg;
-    uint64_t entryInBlock = 0;
+    uint64_t entryInBlockCnt = 0;
     while (pos < n) {
         Entry entry = data[pos++];
         keys.push_back(entry.key);
@@ -91,8 +91,8 @@ SSTable::SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &i
         offset += entry.value.size();
         ++entryCnt;
         block += entry.value;
-        ++entryInBlock;
-        if (block.size() > Option::BLOCK_SPACE) {
+        ++entryInBlockCnt;
+        if (block.size() >= Option::BLOCK_SPACE) {
             std::string compressed;
             snappy::Compress(block.data(), block.size(), &compressed);
             blockSeg += compressed;
@@ -101,13 +101,13 @@ SSTable::SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &i
             ori += block.size();
             cmp += compressed.size();
             block.clear();
-            entryInBlock = 0;
+            entryInBlockCnt = 0;
             ++blockCnt;
             if (indexSpace() + cmp >= Option::SST_SPACE)
                 break;
         }
     }
-    if (entryInBlock > 0) {
+    if (entryInBlockCnt > 0) {
         std::string compressed;
         snappy::Compress(block.data(), block.size(), &compressed);
         blockSeg += compressed;
@@ -135,14 +135,14 @@ SearchResult SSTable::search(uint64_t key) const {
         else if (keys[mid] > key)
             right = mid;
         else
-            return {true, read(mid)};
+            return {true, locate(mid)};
     }
     if (keys[left] == key)
-        return {true, read(left)};
+        return {true, locate(left)};
     else if (keys[right - 1] == key)
-        return {true, read(right - 1)};
+        return {true, locate(right - 1)};
     else
-        return {false, ""};
+        return false;
 }
 
 std::vector<Entry> SSTable::load() const {
@@ -195,11 +195,11 @@ void SSTable::save(const std::string &blockSeg) {
     ofs.close();
 }
 
-std::string SSTable::read(uint64_t pos) const {
+Location SSTable::locate(uint64_t pos) const {
     uint64_t k = 0;
     while (offsets[pos + 1] > oris[k + 1])
         ++k;
-    return loadBlock(k).substr(offsets[pos] - oris[k], offsets[pos + 1] - offsets[pos]);
+    return {this, k, offsets[pos] - oris[k], offsets[pos + 1] - offsets[pos]};
 }
 
 std::string SSTable::loadBlock(uint64_t pos) const {

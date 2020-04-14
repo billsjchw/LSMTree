@@ -6,6 +6,8 @@ const uint64_t Option::SST_SPACE = (uint64_t) 2 * 1024 * 1024;
 
 const uint64_t Option::BLOCK_SPACE = (uint64_t) 4 * 1024;
 
+const uint64_t Option::CACHE_SPACE = (uint64_t) 2 * 1024 * 1024;
+
 const uint64_t Option::Z_SPACE = (uint64_t) 8 * 1024 * 1024;
 
 const uint64_t Option::NZ_SPACES[] = {

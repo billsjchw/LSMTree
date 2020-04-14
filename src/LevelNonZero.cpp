@@ -31,7 +31,7 @@ SearchResult LevelNonZero::search(uint64_t key) const {
         if (res.success)
             return res;
     }
-    return {false, ""};
+    return false;
 }
 #include <iostream>
 std::vector<Entry> LevelNonZero::extract() {

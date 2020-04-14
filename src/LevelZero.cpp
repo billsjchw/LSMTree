@@ -29,7 +29,7 @@ SearchResult LevelZero::search(uint64_t key) const {
         if (res.success)
             return res;
     }
-    return {false, ""};
+    return false;
 }
 
 void LevelZero::add(const SkipList &mem, uint64_t &no) {
