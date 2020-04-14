@@ -1,11 +1,8 @@
 #include "LevelNonZero.h"
-#include "Utility.h"
+#include "Util.h"
 #include "SSTableId.h"
 #include <filesystem>
 #include <fstream>
-#include <algorithm>
-#include <iostream>
-#include <new>
 
 LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
     if (!std::filesystem::exists(std::filesystem::path(dir))) {
@@ -22,32 +19,33 @@ LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
         for (uint64_t i = 0; i < size; ++i) {
             uint64_t no;
             ifs.read((char*) &no, sizeof(uint64_t));
-            ssTables.emplace_back(SSTableId(dir, no));
+            ssts.emplace_back(SSTableId(dir, no));
         }
         ifs.close();
     }
 }
 
 SearchResult LevelNonZero::search(uint64_t key) const {
-    for (const SSTable &ssTable : ssTables) {
-        SearchResult res = ssTable.search(key);
+    for (const SSTable &sst : ssts) {
+        SearchResult res = sst.search(key);
         if (res.success)
             return res;
     }
     return {false, ""};
 }
-
+#include <iostream>
 std::vector<Entry> LevelNonZero::extract() {
-    auto itr = ssTables.begin();
-    while (itr != ssTables.end() && itr->upper() <= lastKey)
+    std::cout << ssts.size() << std::endl;
+    auto itr = ssts.begin();
+    while (itr != ssts.end() && itr->upper() <= lastKey)
         ++itr;
-    if (itr == ssTables.end())
-        itr = ssTables.begin();
+    if (itr == ssts.end())
+        itr = ssts.begin();
     byteCnt -= itr->space();
     lastKey = itr->upper();
     std::vector<Entry> ret = itr->load();
     itr->remove();
-    ssTables.erase(itr);
+    ssts.erase(itr);
     --size;
     save();
     return ret; 
@@ -57,32 +55,31 @@ void LevelNonZero::merge(std::vector<Entry> &&lData, uint64_t &no) {
     uint64_t lo = lData[0].key;
     uint64_t hi = lData.back().key;
     std::vector<Entry> eData;
-    auto itr = ssTables.begin();
-    while (itr != ssTables.end() && itr->upper() < lo)
+    auto itr = ssts.begin();
+    while (itr != ssts.end() && itr->upper() < lo)
         ++itr;
-    while (itr != ssTables.end() && itr->lower() <= hi) {
-        for (Entry &entry : itr->load())
-            eData.emplace_back(std::move(entry));
+    while (itr != ssts.end() && itr->lower() <= hi) {
+        for (const Entry &entry : itr->load())
+            eData.emplace_back(entry);
         byteCnt -= itr->space();
         itr->remove();
-        itr = ssTables.erase(itr);
+        itr = ssts.erase(itr);
         --size;
     }
-    std::vector<Entry> data = Utility::compact({std::move(eData), lData});
+    std::vector<Entry> data = Util::compact({eData, lData});
     size_t n = data.size();
     size_t pos = 0;
     while (pos < n) {
-        ssTables.emplace(itr, data, pos, Utility::SSTABLE_BOUND, SSTableId(dir, no++));
+        byteCnt += ssts.emplace(itr, data, pos, SSTableId(dir, no++))->space();
         ++size;
-        byteCnt += ssTables.back().space();
     }
     save();
 }
 
 void LevelNonZero::clear() {
-    while (!ssTables.empty()) {
-        ssTables.back().remove();
-        ssTables.pop_back();
+    while (!ssts.empty()) {
+        ssts.back().remove();
+        ssts.pop_back();
     }
     size = 0;
     byteCnt = 0;
@@ -99,8 +96,8 @@ void LevelNonZero::save() const {
     ofs.write((char*) &size, sizeof(uint64_t));
     ofs.write((char*) &byteCnt, sizeof(uint64_t));
     ofs.write((char*) &lastKey, sizeof(uint64_t));
-    for (const SSTable &ssTable : ssTables) {
-        uint64_t no = ssTable.number();
+    for (const SSTable &sst : ssts) {
+        uint64_t no = sst.number();
         ofs.write((char*) &no, sizeof(uint64_t));
     }
     ofs.close();

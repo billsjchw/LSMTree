@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdint>
 #include <string>
+#include <ctime>
 
 #include "Test.h"
 
@@ -80,7 +81,10 @@ int main(int argc, char *argv[])
 
 	CorrectnessTest test("./data", verbose);
 
+	clock_t a = clock();
 	test.start_test();
+	clock_t b = clock();
+	std::cout << "Total time: " << (b - a) << "ms" << std::endl;
 
 	return 0;
 }

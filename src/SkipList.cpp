@@ -46,7 +46,7 @@ void SkipList::put(uint64_t key, const std::string &value) {
             prev = prev->prevs[lvl];
     }
     ++totalEntries;
-    totalBytes += value.length();
+    totalBytes += value.size();
 }
 
 bool SkipList::del(uint64_t key) {
@@ -59,7 +59,7 @@ bool SkipList::del(uint64_t key) {
         tower->nexts[lvl]->prevs[lvl] = tower->prevs[lvl];
     }
     --totalEntries;
-    totalBytes -= tower->value.length();
+    totalBytes -= tower->value.size();
     delete tower;
     return true;
 }

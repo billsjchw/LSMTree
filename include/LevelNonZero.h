@@ -21,7 +21,7 @@ private:
     uint64_t size;
     uint64_t byteCnt;
     uint64_t lastKey;
-    std::list<SSTable> ssTables;
+    std::list<SSTable> ssts;
     void save() const;
 };
 
