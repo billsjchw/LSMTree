@@ -13,7 +13,7 @@ public:
     explicit LevelNonZero(const std::string &dir);
     SearchResult search(uint64_t key) const;
     std::vector<Entry> extract();
-    void merge(std::vector<Entry> &&lData, uint64_t &no);
+    void merge(std::vector<Entry> &&entries1, uint64_t &no);
     void clear();
     uint64_t space() const;
 private:
@@ -21,7 +21,7 @@ private:
     uint64_t size;
     uint64_t byteCnt;
     uint64_t lastKey;
-    std::list<SSTable> ssTables;
+    std::list<SSTable> ssts;
     void save() const;
 };
 

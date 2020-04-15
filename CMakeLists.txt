@@ -3,58 +3,16 @@ project(LSMTree)
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(.)
+add_compile_options(-m64)
+add_compile_options(-O3)
 
-add_executable(
-        correctness
-        correctness.cpp
-        DiskStorage.cpp
-        DiskStorage.h
-        Entry.cpp
-        Entry.h
-        KVStore.cpp
-        KVStore.h
-        KVStoreAPI.h
-        LevelNonZero.cpp
-        LevelNonZero.h
-        LevelZero.cpp
-        LevelZero.h
-        SearchResult.cpp
-        SearchResult.h
-        SkipList.cpp
-        SkipList.h
-        SSTable.cpp
-        SSTable.h
-        SSTableId.cpp
-        SSTableId.h
-        Test.h
-        Utility.cpp
-        Utility.h
-)
+aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_DIR)
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
-add_executable(
-        persistence
-        persistence.cpp
-        DiskStorage.cpp
-        DiskStorage.h
-        Entry.cpp
-        Entry.h
-        KVStore.cpp
-        KVStore.h
-        KVStoreAPI.h
-        LevelNonZero.cpp
-        LevelNonZero.h
-        LevelZero.cpp
-        LevelZero.h
-        SearchResult.cpp
-        SearchResult.h
-        SkipList.cpp
-        SkipList.h
-        SSTable.cpp
-        SSTable.h
-        SSTableId.cpp
-        SSTableId.h
-        Test.h
-        Utility.cpp
-        Utility.h
-)
+add_subdirectory(${PROJECT_SOURCE_DIR}/dep/snappy)
+
+add_executable(correctness ./test/correctness.cpp ${SRC_DIR})
+add_executable(persistence ./test/persistence.cpp ${SRC_DIR})
+
+target_link_libraries(correctness snappy)
+target_link_libraries(persistence snappy)
