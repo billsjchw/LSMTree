@@ -74,8 +74,8 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
     save(blockSeg);
 }
 
-SSTable::SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &id): id(id) {
-    size_t n = data.size();
+SSTable::SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId &id): id(id) {
+    size_t n = entries.size();
     entryCnt = 0;
     blockCnt = 0;
     uint64_t offset = 0;
@@ -85,7 +85,7 @@ SSTable::SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &i
     std::string blockSeg;
     uint64_t entryInBlockCnt = 0;
     while (pos < n) {
-        Entry entry = data[pos++];
+        Entry entry = entries[pos++];
         keys.push_back(entry.key);
         offsets.push_back(offset);
         offset += entry.value.size();
@@ -146,7 +146,7 @@ SearchResult SSTable::search(uint64_t key) const {
 }
 
 std::vector<Entry> SSTable::load() const {
-    std::vector<Entry> data;
+    std::vector<Entry> entries;
     uint64_t k = 0;
     std::string block = loadBlock(0);
     for (uint64_t i = 0; i < entryCnt; ++i) {
@@ -154,9 +154,9 @@ std::vector<Entry> SSTable::load() const {
             block = loadBlock(++k);
         uint64_t key = keys[i];
         std::string value = block.substr(offsets[i] - oris[k], offsets[i + 1] - offsets[i]);
-        data.emplace_back(key, value);
+        entries.emplace_back(key, value);
     }
-    return data;
+    return entries;
 }
 
 void SSTable::remove() const {

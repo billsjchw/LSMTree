@@ -33,9 +33,8 @@ SearchResult LevelNonZero::search(uint64_t key) const {
     }
     return false;
 }
-#include <iostream>
+
 std::vector<Entry> LevelNonZero::extract() {
-    std::cout << ssts.size() << std::endl;
     auto itr = ssts.begin();
     while (itr != ssts.end() && itr->upper() <= lastKey)
         ++itr;
@@ -51,26 +50,26 @@ std::vector<Entry> LevelNonZero::extract() {
     return ret; 
 }
 
-void LevelNonZero::merge(std::vector<Entry> &&lData, uint64_t &no) {
-    uint64_t lo = lData[0].key;
-    uint64_t hi = lData.back().key;
-    std::vector<Entry> eData;
+void LevelNonZero::merge(std::vector<Entry> &&entries1, uint64_t &no) {
+    uint64_t lo = entries1[0].key;
+    uint64_t hi = entries1.back().key;
+    std::vector<Entry> entries0;
     auto itr = ssts.begin();
     while (itr != ssts.end() && itr->upper() < lo)
         ++itr;
     while (itr != ssts.end() && itr->lower() <= hi) {
         for (const Entry &entry : itr->load())
-            eData.emplace_back(entry);
+            entries0.emplace_back(entry);
         byteCnt -= itr->space();
         itr->remove();
         itr = ssts.erase(itr);
         --size;
     }
-    std::vector<Entry> data = Util::compact({eData, lData});
-    size_t n = data.size();
+    std::vector<Entry> entries = Util::compact({entries0, entries1});
+    size_t n = entries.size();
     size_t pos = 0;
     while (pos < n) {
-        byteCnt += ssts.emplace(itr, data, pos, SSTableId(dir, no++))->space();
+        byteCnt += ssts.emplace(itr, entries, pos, SSTableId(dir, no++))->space();
         ++size;
     }
     save();

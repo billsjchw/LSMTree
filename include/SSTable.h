@@ -15,7 +15,7 @@ class SSTable {
 public:
     explicit SSTable(const SSTableId &id);
     explicit SSTable(const SkipList &mem, const SSTableId &id);
-    explicit SSTable(const std::vector<Entry> &data, size_t &pos, const SSTableId &id);
+    explicit SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId &id);
     SearchResult search(uint64_t key) const;
     std::vector<Entry> load() const;
     std::string loadBlock(uint64_t pos) const;
