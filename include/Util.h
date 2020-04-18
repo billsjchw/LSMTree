@@ -6,6 +6,6 @@
 
 namespace Util {
     std::vector<Entry> compact(const std::vector<std::vector<Entry>> &inputs);
-};
+}
 
 #endif

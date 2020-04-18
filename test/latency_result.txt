@@ -1,0 +1,4 @@
+PUT: 0.0979ms
+GET (seq): 0.0498ms
+GET (rnd): 0.2570ms
+DEL: 0.0075ms

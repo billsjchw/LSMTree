@@ -1,4 +1,5 @@
 #include "SkipList.h"
+#include "Option.h"
 #include <cstring>
 
 SkipList::SkipList(): dist(0, 1) {
@@ -82,7 +83,7 @@ bool SkipList::empty() const {
 }
 
 uint64_t SkipList::space() const {
-    return (totalEntries * 2 + 3) * sizeof(uint64_t) + totalBytes;
+    return (totalEntries * 2 + totalBytes / Option::BLOCK_SPACE * 2 + 6) * sizeof(uint64_t) + totalBytes;
 }
 
 void SkipList::init() {

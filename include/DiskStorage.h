@@ -5,7 +5,8 @@
 #include "LevelZero.h"
 #include "LevelNonZero.h"
 #include "SearchResult.h"
-#include "Cache.h"
+#include "BlockCache.h"
+#include "TableCache.h"
 #include <string>
 #include <cstdint>
 #include <vector>
@@ -14,14 +15,15 @@ class DiskStorage {
 public:
     explicit DiskStorage(const std::string &dir);
     void add(const SkipList &mem);
-    SearchResult search(uint64_t key);
+    SearchResult search(uint64_t key, bool needValue);
     void clear();
 private:
     std::string dir;
     uint64_t no;
     LevelZero level0;
     std::vector<LevelNonZero> levels;
-    Cache cache;
+    BlockCache blockCache;
+    TableCache tableCache;
     void save() const;
 };
 

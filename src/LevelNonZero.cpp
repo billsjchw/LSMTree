@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <fstream>
 
-LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
+LevelNonZero::LevelNonZero(const std::string &dir, TableCache *tableCache): dir(dir), tableCache(tableCache) {
     if (!std::filesystem::exists(std::filesystem::path(dir))) {
         std::filesystem::create_directories(std::filesystem::path(dir));
         size = 0;
@@ -19,7 +19,7 @@ LevelNonZero::LevelNonZero(const std::string &dir): dir(dir) {
         for (uint64_t i = 0; i < size; ++i) {
             uint64_t no;
             ifs.read((char*) &no, sizeof(uint64_t));
-            ssts.emplace_back(SSTableId(dir, no));
+            ssts.emplace_back(SSTableId(dir, no), tableCache);
         }
         ifs.close();
     }
@@ -47,7 +47,7 @@ std::vector<Entry> LevelNonZero::extract() {
     ssts.erase(itr);
     --size;
     save();
-    return ret; 
+    return ret;
 }
 
 void LevelNonZero::merge(std::vector<Entry> &&entries1, uint64_t &no) {
@@ -69,7 +69,7 @@ void LevelNonZero::merge(std::vector<Entry> &&entries1, uint64_t &no) {
     size_t n = entries.size();
     size_t pos = 0;
     while (pos < n) {
-        byteCnt += ssts.emplace(itr, entries, pos, SSTableId(dir, no++))->space();
+        byteCnt += ssts.emplace(itr, entries, pos, SSTableId(dir, no++), tableCache)->space();
         ++size;
     }
     save();

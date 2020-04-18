@@ -9,13 +9,13 @@
 #include <unordered_map>
 #include <cstdint>
 
-class Cache {
+class BlockCache {
 public:
-    explicit Cache();
+    explicit BlockCache();
     void complete(SearchResult &result);
 private:
     uint64_t byteCnt;
-    std::list<std::pair<std::string, std::string>> blocks;
+    std::list<std::pair<std::string, std::string>> linkedList;
     std::unordered_map<std::string, std::list<std::pair<std::string, std::string>>::iterator> hashMap;
     std::string read(Location location);
 };
