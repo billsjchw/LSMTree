@@ -1,1 +1,4 @@
+.idea
 cmake-build-debug
+doc/*.pptx
+doc/scripts

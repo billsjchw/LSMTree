@@ -1,5 +1,4 @@
 #include "KVStore.h"
-#include "Util.h"
 #include "SearchResult.h"
 #include "Option.h"
 #include <string>
@@ -22,14 +21,21 @@ void KVStore::put(uint64_t key, const std::string &value) {
 std::string KVStore::get(uint64_t key) {
 	if (mem.contains(key))
 		return mem.get(key);
-	SearchResult res = disk.search(key);
-	return res.success ? res.value : "";
+	SearchResult result = disk.search(key, true);
+	return result.value;
 }
 
 bool KVStore::del(uint64_t key) {
-	bool ret = get(key) != "";
-	put(key, "");
-	return ret;
+    bool exist;
+    if (mem.contains(key))
+        exist = !mem.get(key).empty();
+    else {
+        SearchResult result = disk.search(key, false);
+        exist = result.success && result.location.len;
+    }
+	if (exist)
+	    put(key, "");
+	return exist;
 }
 
 void KVStore::reset() {

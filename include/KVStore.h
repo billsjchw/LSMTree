@@ -4,7 +4,7 @@
 
 class KVStore: public KVStoreAPI {
 public:
-	KVStore(const std::string &dir);
+	explicit KVStore(const std::string &dir);
 	~KVStore();
 	void put(uint64_t key, const std::string &value) override;
 	std::string get(uint64_t key) override;

@@ -6,6 +6,7 @@
 #include "SearchResult.h"
 #include "SSTableId.h"
 #include "Location.h"
+#include "TableCache.h"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -13,9 +14,9 @@
 
 class SSTable {
 public:
-    explicit SSTable(const SSTableId &id);
-    explicit SSTable(const SkipList &mem, const SSTableId &id);
-    explicit SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId &id);
+    explicit SSTable(const SSTableId &id, TableCache *tableCache);
+    explicit SSTable(const SkipList &mem, const SSTableId &id, TableCache *tableCache);
+    explicit SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId &id, TableCache *tableCache);
     SearchResult search(uint64_t key) const;
     std::vector<Entry> load() const;
     std::string loadBlock(uint64_t pos) const;
@@ -32,6 +33,7 @@ private:
     std::vector<uint64_t> offsets;
     std::vector<uint64_t> oris;
     std::vector<uint64_t> cmps;
+    TableCache *tableCache;
     void save(const std::string &blockSeg);
     Location locate(uint64_t pos) const;
     uint64_t indexSpace() const;

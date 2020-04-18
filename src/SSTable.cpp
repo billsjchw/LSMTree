@@ -5,7 +5,8 @@
 #include <fstream>
 #include <filesystem>
 
-SSTable::SSTable(const SSTableId &id): id(id) {
+SSTable::SSTable(const SSTableId &id, TableCache *tableCache)
+    : id(id), tableCache(tableCache) {
     std::ifstream ifs(id.name(), std::ios::binary);
     ifs.read((char*) &entryCnt, sizeof(uint64_t));
     for (uint64_t i = 0; i <= entryCnt; ++i) {
@@ -26,14 +27,17 @@ SSTable::SSTable(const SSTableId &id): id(id) {
     ifs.close();
 }
 
-SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
+SSTable::SSTable(const SkipList &mem, const SSTableId &id, TableCache *tableCache)
+    : id(id), tableCache(tableCache) {
     entryCnt = mem.size();
     blockCnt = 0;
     uint64_t offset = 0;
     uint64_t ori = 0;
     uint64_t cmp = 0;
     std::string block;
+    block.reserve(Option::BLOCK_SPACE);
     std::string blockSeg;
+    blockSeg.reserve(Option::SST_SPACE);
     uint64_t entryInBlockCnt = 0;
     SkipList::Iterator itr = mem.iterator();
     while (itr.hasNext()) {
@@ -45,7 +49,10 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
         ++entryInBlockCnt;
         if (block.size() >= Option::BLOCK_SPACE) {
             std::string compressed;
-            snappy::Compress(block.data(), block.size(), &compressed);
+            if (Option::COMPRESSION)
+                snappy::Compress(block.data(), block.size(), &compressed);
+            else
+                compressed = block;
             blockSeg += compressed;
             oris.push_back(ori);
             cmps.push_back(cmp);
@@ -58,7 +65,10 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
     }
     if (entryInBlockCnt > 0) {
         std::string compressed;
-        snappy::Compress(block.data(), block.size(), &compressed);
+        if (Option::COMPRESSION)
+            snappy::Compress(block.data(), block.size(), &compressed);
+        else
+            compressed = block;
         blockSeg += compressed;
         oris.push_back(ori);
         cmps.push_back(cmp);
@@ -74,7 +84,8 @@ SSTable::SSTable(const SkipList &mem, const SSTableId &id): id(id) {
     save(blockSeg);
 }
 
-SSTable::SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId &id): id(id) {
+SSTable::SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId &id, TableCache *tableCache)
+    : id(id), tableCache(tableCache) {
     size_t n = entries.size();
     entryCnt = 0;
     blockCnt = 0;
@@ -82,7 +93,9 @@ SSTable::SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId
     uint64_t ori = 0;
     uint64_t cmp = 0;
     std::string block;
+    block.reserve(Option::BLOCK_SPACE);
     std::string blockSeg;
+    blockSeg.reserve(Option::SST_SPACE);
     uint64_t entryInBlockCnt = 0;
     while (pos < n) {
         Entry entry = entries[pos++];
@@ -94,7 +107,10 @@ SSTable::SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId
         ++entryInBlockCnt;
         if (block.size() >= Option::BLOCK_SPACE) {
             std::string compressed;
-            snappy::Compress(block.data(), block.size(), &compressed);
+            if (Option::COMPRESSION)
+                snappy::Compress(block.data(), block.size(), &compressed);
+            else
+                compressed = block;
             blockSeg += compressed;
             oris.push_back(ori);
             cmps.push_back(cmp);
@@ -109,7 +125,10 @@ SSTable::SSTable(const std::vector<Entry> &entries, size_t &pos, const SSTableId
     }
     if (entryInBlockCnt > 0) {
         std::string compressed;
-        snappy::Compress(block.data(), block.size(), &compressed);
+        if (Option::COMPRESSION)
+            snappy::Compress(block.data(), block.size(), &compressed);
+        else
+            compressed = block;
         blockSeg += compressed;
         oris.push_back(ori);
         cmps.push_back(cmp);
@@ -160,6 +179,8 @@ std::vector<Entry> SSTable::load() const {
 }
 
 void SSTable::remove() const {
+    if (Option::TABLE_CACHE)
+        tableCache->close(id);
     std::filesystem::remove(std::filesystem::path(id.name()));
 }
 
@@ -205,11 +226,20 @@ Location SSTable::locate(uint64_t pos) const {
 std::string SSTable::loadBlock(uint64_t pos) const {
     std::string block;
     char *buf = new char[cmps[pos + 1] - cmps[pos]];
-    std::ifstream ifs(id.name(), std::ios::binary);
-    ifs.seekg(indexSpace() + cmps[pos], std::ios::beg);
-    ifs.read(buf, cmps[pos + 1] - cmps[pos]);
-    ifs.close();
-    snappy::Uncompress(buf, cmps[pos + 1] - cmps[pos], &block);
+    if (Option::TABLE_CACHE) {
+        std::ifstream *ifs = tableCache->open(id);
+        ifs->seekg(indexSpace() + cmps[pos], std::ios::beg);
+        ifs->read(buf, cmps[pos + 1] - cmps[pos]);
+    } else {
+        std::ifstream ifs(id.name(), std::ios::binary);
+        ifs.seekg(indexSpace() + cmps[pos], std::ios::beg);
+        ifs.read(buf, cmps[pos + 1] - cmps[pos]);
+        ifs.close();
+    }
+    if (Option::COMPRESSION)
+        snappy::Uncompress(buf, cmps[pos + 1] - cmps[pos], &block);
+    else
+        block.assign(buf, cmps[pos + 1] - cmps[pos]);
     delete[] buf;
     return block;
 }
